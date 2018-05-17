@@ -1,7 +1,9 @@
 package com.example.madcat.androidlivedataexample;
 
+import android.arch.core.util.Function;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.Transformations;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -29,13 +31,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         LiveData<String> liveData = DataController.getInstance().getData();
 
-        liveData.observe(this, new Observer<String>() {
+        LiveData<User> userLiveData = Transformations.switchMap(liveData, new Function<String, LiveData<User>>() {
             @Override
-            public void onChanged(@Nullable String value) {
+            public LiveData<User> apply(String input) {
+                UserDataController.getInstance().addData(input);
+
+                return UserDataController.getInstance().getData();
+            }
+        });
+
+        userLiveData.observe(this, new Observer<User>() {
+            @Override
+            public void onChanged(@Nullable User user) {
                 StringBuilder buffer = new StringBuilder();
 
                 buffer.append(viewText.getText().toString());
-                buffer.append("\n").append(value);
+                buffer.append("user id: ").append(user.getUserId()).append(" user name: ").append(user.getName()).append("\n");
 
                 viewText.setText(buffer.toString());
             }
